@@ -10,18 +10,20 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model User{
-  id          String @id @default(uuid())
-  name        String 
-  email       String @unique
-  password    String 
+model User {
+  id String @id @default(uuid())
+  name String
+  email String @unique
+  password String
 
-  createdAT DateTime @default(now())
+  createdAt DateTime @default(now())
 
+  // Relations
+  movies         Movie[]         @relation("MovieCreator")
   watchlistItems WatchlistItem[]
-  movies Movie[] @relation("MovieCreator")
 }
 
 model Movie {
@@ -35,8 +37,7 @@ model Movie {
   createdBy   String   
   createdAt   DateTime @default(now()) 
 
-  creator User @relation("MovieCreator",fields: [createdBy], references: [id], onDelete:Cascade  )
-
+  creator User  @relation("MovieCreator", fields: [createdBy], references: [id], onDelete: Cascade)
   watchlistItems WatchlistItem[]
 }
 
@@ -48,11 +49,13 @@ model WatchlistItem {
   rating    Int?
   notes     String?
   createdAt DateTime @default(now()) 
-  updatedAt DateTime @default(now())  
+  updatedAt DateTime @default(now()) 
 
-  user User @relation(fields: [userId], references: [id], onDelete:Cascade  )
-  movie Movie @relation(fields: [movieId], references: [id], onDelete:Cascade  )
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, movieId])
 }
 
 enum WatchlistStatus {
@@ -61,3 +64,5 @@ enum WatchlistStatus {
   COMPLETED
   DROPPED
 }
+
+// USER -> MOVIE -> WATCHLIST
