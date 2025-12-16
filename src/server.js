@@ -1,22 +1,33 @@
-import express from 'express';
-import {config} from 'dotenv'
-import { connectDB, disconnectDB } from './config/db.js';
+import express from "express";
+import { config } from "dotenv";
+import { connectDB, disconnectDB } from "./config/db.js";
 
-import movieRoutes from './routes/movieRoutes.js';
+import movieRoutes from "./routes/movieRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 config();
-connectDB();
+
 const app = express();
 
-//API Routes
-app.use('/movies', movieRoutes);
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use("/movies", movieRoutes);
+app.use("/auth", authRoutes);
 
 const port = 5001;
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+
+// Start server
+const server = app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
 });
 
-// Handle unhandled promise rejections (e.g., database connection errors)
+// Connect DB
+connectDB();
+
+// Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
   console.error("Unhandled Rejection:", err);
   server.close(async () => {
@@ -34,7 +45,7 @@ process.on("uncaughtException", async (err) => {
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
-  console.log("SIGTERM received, shutting down gracefully");
+  console.log("SIGTERM received. Shutting down...");
   server.close(async () => {
     await disconnectDB();
     process.exit(0);
